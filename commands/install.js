@@ -28,14 +28,20 @@ module.exports = function installCommand(program) {
             } else {
                 var parsed = npa(repo);
                 var repoUrl = null;
-                var opts = {};
+                var opts = {
+                    remoteCallbacks: {
+                        credentials: function(url, userName) {
+                            return NodeGit.Cred.sshKeyFromAgent(userName);
+                        }
+                    }
+                };
 
                 if (parsed.type === 'git') {
                     repoUrl = parsed.spec.replace('+https', ''); //nodegit doesn't support git+https:// addresses
                 } else if (parsed.type === 'hosted') {
                     // Github SSL cert isn't trusted by nodegit on OS X d-(^_^)z
                     if (process.platform === 'darwin') {
-                        opts = { ignoreCertErrors: 1 };
+                        opts.ignoreCertErrors = 1;
                     }
 
                     repoUrl = parsed.hosted.httpsUrl;
